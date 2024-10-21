@@ -44,7 +44,7 @@ jobs:
           az container create \
             --resource-group baconchat \
             --name baconchatcontainer \
-            --image bacon-chat-work.azurecr.io/baconchatportfolio:latest \
+            --image baconchatwork.azurecr.io/baconchatportfolio:latest \
             --registry-login-server bacon-chat-work.azurecr.io \
             --registry-username ${{ secrets.ACR_USERNAME }} \
             --registry-password ${{ secrets.ACR_PASSWORD }} \
