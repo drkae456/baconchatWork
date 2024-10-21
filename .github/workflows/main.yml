@@ -50,6 +50,5 @@ jobs:
 
       # Apply the Terraform configuration
       - name: Terraform Apply
-      env:
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: terraform apply -auto-approve
+

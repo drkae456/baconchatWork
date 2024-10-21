@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+provider "azurerm" {
+  features {}
+}
+
+>>>>>>> 41990cdd16d21a3816de7b3a640093c690da71de
 # Data source to reference the existing Resource Group
 data "azurerm_resource_group" "baconchat" {
   name = "baconchat"  # Replace with your resource group name
