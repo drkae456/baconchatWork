@@ -4,12 +4,12 @@ provider "azurerm" {
 
 # Data source to reference the existing Resource Group
 data "azurerm_resource_group" "baconchat" {
-  name = "baconchat"  # Replace with your resource group name
+  name = "baconchat"
 }
 
 # Data source to reference an existing Azure Container Registry
 data "azurerm_container_registry" "acr" {
-  name                = "baconchatwork"  # Replace with your ACR name
+  name                = "baconchatwork"
   resource_group_name = data.azurerm_resource_group.baconchat.name
 }
 
@@ -28,21 +28,21 @@ resource "azurerm_container_group" "aci" {
     memory = "1.5"
 
     ports {
-      port     = 80  # Exposing port 80 externally and internally
+      port     = 80
       protocol = "TCP"
     }
 
     environment_variables = {
-      NODE_ENV = "development"  # Set NODE_ENV to development
+      NODE_ENV = "development"
     }
 
-    commands = ["npm", "run", "dev"]  # Start the app using npm run dev
+    commands = ["npm", "run", "dev"]
   }
 
   image_registry_credential {
     server   = data.azurerm_container_registry.acr.login_server
-    username = data.azurerm_container_registry.acr.admin_username  # Admin username from ACR
-    password = data.azurerm_container_registry.acr.admin_password  # Admin password from ACR
+    username = data.azurerm_container_registry.acr.admin_username
+    password = data.azurerm_container_registry.acr.admin_password
   }
 
   tags = {
