@@ -11,8 +11,11 @@ COPY ../../package-lock.json ./
 # Copy the rest of the application from two directories back (../../)
 COPY ../../ ./
 
-# Expose the port (adjust as necessary)
 EXPOSE 80
 
-# Command to run the app
+# Set the environment variable for the port
+ENV PORT=80
+
+# Run the app on port 80
 CMD ["npm", "run", "dev"]
+
