@@ -114,10 +114,10 @@ reports/mutation/
 .terraform.tfstate.lock.info
 terraform.tfstate
 terraform.tfstate.backup
-.tfvars
+
 # Allow main Terraform file
 !main.tf
 
 # Allow other specific Terraform files (optional, add others if needed)
 !*.tf
-
+!.tfvars

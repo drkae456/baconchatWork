@@ -2,7 +2,6 @@ provider "azurerm" {
   features {}
 }
 
-
 # Data source to reference the existing Resource Group
 data "azurerm_resource_group" "baconchat" {
   name = "baconchat"  # Replace with your resource group name
