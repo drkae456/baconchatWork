@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 provider "azurerm" {
   features {}
 }

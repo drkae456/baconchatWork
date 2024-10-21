@@ -16,7 +16,7 @@ COPY ../../ ./
 EXPOSE 80
 
 # Set the environment variable for the port
-ENV ENV NODE_ENV=production
+ENV NODE_ENV=production
 
 
 # Run the app on port 80
