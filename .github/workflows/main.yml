@@ -32,9 +32,20 @@ jobs:
           docker build -f ./docker/WebApp/Dockerfile -t baconchatwork.azurecr.io/baconchatportfolio:latest .
           docker push baconchatwork.azurecr.io/baconchatportfolio:latest
 
-      # Azure Web App Deployment (Optional: if you're deploying to an Azure Web App)
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+ # Azure Login (For deploying the container instance)
+      - name: Log in to Azure CLI
+        uses: azure/login@v1
         with:
-          app-name:  baconchatwork
-          images:  baconchatwork.azurecr.io/baconchatportfolio:latest
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Redeploy the Azure Container Instance with the new image
+      - name: Redeploy Azure Container Instance
+        run: |
+          az container create \
+            --resource-group baconchat \
+            --name baconchatcontainer \
+            --image bacon-chat-work.azurecr.io/baconchatportfolio:latest \
+            --registry-login-server bacon-chat-work.azurecr.io \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --restart-policy Always
