@@ -33,10 +33,10 @@ resource "azurerm_container_group" "aci" {
     }
 
     environment_variables = {
-      NODE_ENV = "development"
+      NODE_ENV = "production"
     }
 
-    commands = ["npm", "run", "dev"]
+    commands = ["npm", "start"]
   }
 
   image_registry_credential {
