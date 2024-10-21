@@ -43,9 +43,9 @@ jobs:
         run: |
           az container create \
             --resource-group baconchat \
-            --name baconchatcontainer \
+            --name baconchat-webapp \
             --image baconchatwork.azurecr.io/baconchatportfolio:latest \
-            --registry-login-server bacon-chat-work.azurecr.io \
+            --registry-login-server baconchatwork.azurecr.io \
             --registry-username ${{ secrets.ACR_USERNAME }} \
             --registry-password ${{ secrets.ACR_PASSWORD }} \
             --restart-policy Always
