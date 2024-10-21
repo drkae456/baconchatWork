@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to ACR
+name: Build, Push Docker Image, and Redeploy with Terraform
 
 on:
   push:
@@ -32,20 +32,22 @@ jobs:
           docker build -f ./docker/WebApp/Dockerfile -t baconchatwork.azurecr.io/baconchatportfolio:latest .
           docker push baconchatwork.azurecr.io/baconchatportfolio:latest
 
- # Azure Login (For deploying the container instance)
+      # Azure Login using JSON credentials (For deploying the container instance)
       - name: Log in to Azure CLI
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Redeploy the Azure Container Instance with the new image
-      - name: Redeploy Azure Container Instance
-        run: |
-          az container create \
-            --resource-group baconchat \
-            --name baconchat-webapp \
-            --image baconchatwork.azurecr.io/baconchatportfolio:latest \
-            --registry-login-server baconchatwork.azurecr.io \
-            --registry-username ${{ secrets.ACR_USERNAME }} \
-            --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --restart-policy Always
+      # Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0 # You can specify the version you need
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Apply the Terraform configuration
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
