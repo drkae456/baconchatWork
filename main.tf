@@ -1,18 +1,20 @@
+# Provider configuration
 provider "azurerm" {
   features {}
 }
 
-# Data source to reference the existing Resource Group
+# Data source for the existing Resource Group
 data "azurerm_resource_group" "baconchat" {
   name = "baconchat"
 }
 
-# Data source to reference an existing Azure Container Registry
+# Data source for the existing Azure Container Registry
 data "azurerm_container_registry" "acr" {
   name                = "baconchatwork"
   resource_group_name = data.azurerm_resource_group.baconchat.name
 }
 
+# Azure Container Group resource
 resource "azurerm_container_group" "aci" {
   name                = "baconchat-webapp"
   resource_group_name = data.azurerm_resource_group.baconchat.name
@@ -23,7 +25,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "webapp"
-    image  = "${data.azurerm_container_registry.acr.login_server}/baconchatportfolio:latest"  # Use full path for ACR image
+    image  = "${data.azurerm_container_registry.acr.login_server}/baconchatportfolio:latest"
     cpu    = "1.0"
     memory = "1.5"
 
