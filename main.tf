@@ -1,5 +1,38 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+}
+
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
+}
+
+variable "subscription_id" {
+  description = "Azure Subscription ID"
+  type        = string
+}
+
+variable "client_id" {
+  description = "Azure Client ID"
+  type        = string
+}
+
+variable "client_secret" {
+  description = "Azure Client Secret"
+  type        = string
+}
+
+variable "tenant_id" {
+  description = "Azure Tenant ID"
+  type        = string
 }
 
 # Data source to reference the existing Resource Group
@@ -19,11 +52,12 @@ resource "azurerm_container_group" "aci" {
   location            = data.azurerm_resource_group.baconchat.location
   os_type             = "Linux"
   ip_address_type     = "Public"
-  dns_name_label      = "baconchat-webapp"  # Must be globally unique
+  dns_name_label      = "baconchat-webapp"
+  restart_policy      = "Always"
 
   container {
     name   = "webapp"
-    image  = "${data.azurerm_container_registry.acr.login_server}/baconchatportfolio:latest"  # Use full path for ACR image
+    image  = "${data.azurerm_container_registry.acr.login_server}/baconchatportfolio:latest"
     cpu    = "1.0"
     memory = "1.5"
 
@@ -50,7 +84,6 @@ resource "azurerm_container_group" "aci" {
   }
 }
 
-# Outputs
 output "aci_fqdn" {
   value = azurerm_container_group.aci.fqdn
 }
