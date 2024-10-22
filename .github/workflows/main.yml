@@ -35,6 +35,15 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - name: Create terraform.tfvars
+        run: |
+          cat > terraform.tfvars <<EOF
+          subscription_id = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          client_id       = "${{ secrets.AZURE_CLIENT_ID }}"
+          client_secret   = "${{ secrets.AZURE_CLIENT_SECRET }}"
+          tenant_id       = "${{ secrets.AZURE_TENANT_ID }}"
+          EOF
+
       - name: Terraform Init
         run: terraform init
 
@@ -53,11 +62,6 @@ jobs:
         run: |
           terraform plan -detailed-exitcode -out=tfplan || echo "::set-output name=has_changes::true"
         continue-on-error: true
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       # Apply if there are infrastructure changes
       - name: Apply Infrastructure Changes
@@ -65,11 +69,6 @@ jobs:
         run: |
           echo "Applying infrastructure changes with Terraform..."
           terraform apply -auto-approve tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       # If no infrastructure changes, just restart the container
       - name: Restart Container if No Infrastructure Changes
