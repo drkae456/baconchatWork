@@ -1,25 +1,18 @@
-
-name:  Build, Push Docker Image, and Redeploy with Terraform
-
+name: Build, Push Docker Image, and Redeploy with Terraform
 on:
   push:
     branches:
       - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Log in to Azure Container Registry
       - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
@@ -27,38 +20,60 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # Build and push the Docker image
       - name: Build and push Docker image
         run: |
           docker build -f ./docker/WebApp/Dockerfile -t baconchatwork.azurecr.io/baconchatportfolio:latest .
           docker push baconchatwork.azurecr.io/baconchatportfolio:latest
 
-      # Azure Login using JSON credentials (For deploying the container instance)
       - name: Log in to Azure CLI
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Set up Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.0 # You can specify the version you need
+          terraform_version: 1.5.0
 
-      # Initialize Terraform
       - name: Terraform Init
         run: terraform init
 
-      - name: Import Azure Container Group
-        run: terraform import azurerm_container_group.aci "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.ContainerInstance/containerGroups/${{ secrets.AZURE_CONTAINER_GROUP }}"
-        continue-on-error: true  
+      # First, try to import if the resource exists
+      - name: Import existing container if it exists
+        run: |
+          if az container show -g ${{ secrets.AZURE_RESOURCE_GROUP }} -n baconchat-webapp &>/dev/null; then
+            echo "Container exists. Importing into Terraform state..."
+            terraform import azurerm_container_group.aci "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.ContainerInstance/containerGroups/baconchat-webapp" || true
+          fi
+        continue-on-error: true
 
-      # Apply the Terraform configuration
-      - name: Terraform Apply
+      # Plan and check for changes
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -detailed-exitcode -out=tfplan || echo "::set-output name=has_changes::true"
+        continue-on-error: true
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        run: terraform apply -auto-approve
 
+      # Apply if there are infrastructure changes
+      - name: Apply Infrastructure Changes
+        if: steps.plan.outputs.has_changes == 'true'
+        run: |
+          echo "Applying infrastructure changes with Terraform..."
+          terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      # If no infrastructure changes, just restart the container
+      - name: Restart Container if No Infrastructure Changes
+        if: steps.plan.outputs.has_changes != 'true'
+        run: |
+          echo "No infrastructure changes detected. Restarting container to pick up new image..."
+          az container restart -g ${{ secrets.AZURE_RESOURCE_GROUP }} -n baconchat-webapp
